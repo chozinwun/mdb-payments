@@ -79,6 +79,18 @@
 
 	}
 
+	function mdb_filter_product_content( $content ) {
+
+		global $post;
+
+		if ( $post->post_type == 'product' ) {
+
+			return $content . "<button>Buy Ticket</button>";
+
+		}
+
+	}
+
 	// Action hooks for mochila api
 	function mdb_get_products( $mochila ) {
 
@@ -131,4 +143,6 @@
 	add_action( 'add_meta_boxes', 'mdb_products_meta_boxes' );
 	add_action( 'save_post', 'mdb_save_product' );
 	add_action( 'mochila_get', 'mdb_get_products', 10, 1 );
+
+	add_filter( 'the_content', 'mdb_filter_product_content' );
 ?>
