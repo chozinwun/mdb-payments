@@ -54,6 +54,7 @@
 
 		$amount_type = get_post_meta( $post->ID, 'amount_type', true );
 		$amount = get_post_meta( $post->ID, 'amount', true );
+		$button_label = get_post_meta( $post->ID, 'button_label', true );
 
 		echo "<p><strong>Amount Type</strong> $amount_type</p>";
 		echo "<select name=\"amount_type\">";
@@ -65,6 +66,8 @@
 		echo "<p><strong>Amount</strong></p>";
 		echo "<input type=\"text\" name=\"amount\" value=\"$amount\" />";
 
+		echo "<p><strong>Button Label</strong></p>";
+		echo "<input type=\"text\" name=\"button_label\" value=\"$button_label\" />";
 	}
 
 	function mdb_save_product( $post_id ) {
@@ -77,6 +80,13 @@
 			update_post_meta( $post_id, 'amount', $_REQUEST['amount'] );
 		}
 
+		if ( isset($_REQUEST['button_type']) ) {
+			update_post_meta( $post_id, 'amount', $_REQUEST['amount'] );
+		}
+
+		if ( isset($_REQUEST['button_label']) ) {
+			update_post_meta( $post_id, 'button_label', $_REQUEST['button_label'] );
+		}
 	}
 
 	function mdb_filter_product_content( $content ) {
@@ -85,7 +95,12 @@
 
 		if ( $post->post_type == 'product' ) {
 
-			return $content . "<button>Buy Ticket</button>";
+			ob_start();
+			include( plugin_dir_path( __FILE__ ) . 'templates/product-buy-now.php' );
+			$content = $content . ob_get_clean();
+			ob_flush();
+			
+			return $content;
 
 		}
 
