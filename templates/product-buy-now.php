@@ -4,7 +4,14 @@
 	$button_label = get_post_meta( $post->ID, 'button_label', true );
 
 	$button_label = ($button_label) ? $button_label : 'Buy Now';
+	
+	$post_status = get_post_status( $post->ID );
 
+	if ($post_status == 'publish') {
+		$stripe_public_key = get_option('mdb_product_stripe_public_key');
+	} else {
+		$stripe_public_key = get_option('mdb_product_stripe_test_public_key');
+	}
 
 	/*
 	ToDos:
@@ -22,6 +29,7 @@
 
 
 <form>
+
 	<?php if( $amount_type == 'donation' ): ?>
 
 		<label>Amount: </label>
@@ -34,5 +42,9 @@
 
 	<?php endif; ?>
 
-	<input type="submit" value="<?php echo $button_label ?>" />
+	<input type="hidden" name="stripeToken" value="" />
+	<input type="hidden" name="stripe_public_key" value="<?php echo $stripe_public_key ?>" />
+	<button id="submit-button"><?php echo $button_label ?></button>
 </form>
+
+<script src="https://checkout.stripe.com/v2/checkout.js"></script>

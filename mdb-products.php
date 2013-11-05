@@ -44,6 +44,28 @@
 		);
 
 		register_post_type( 'product', $args );
+
+		add_option( 'mdb_product_stripe_secret_key', '', '', true );
+		add_option( 'mdb_product_stripe_public_key', '', '', true );
+		add_option( 'mdb_product_stripe_test_secret_key', '', '', true );
+		add_option( 'mdb_product_stripe_test_public_key', '', '', true );
+	}
+
+	function mdb_products_admin_menu() {
+		
+		add_submenu_page( 'edit.php?post_type=product', 'Products Settings', 'Settings', 'manage_options', 'mdb-product-settings', 'mdb_page_product_settings' );
+
+	}
+
+	function mdb_product_load_scripts() {
+
+		wp_register_script( 'mdb-product-buynow-js', plugins_url( '/assets/js/product.buynow.js', __FILE__ ), array('jquery'), false );
+		wp_enqueue_script( 'mdb-product-buynow-js' );
+
+	}
+
+	function mdb_page_product_settings() {
+		include( plugin_dir_path( __FILE__ ) . 'templates/admin-product-settings.php' );
 	}
 
 	function mdb_products_meta_boxes() {
@@ -155,9 +177,13 @@
 	}
 
 	add_action( 'init', 'mdb_products_init' );
+	add_action( 'admin_menu', 'mdb_products_admin_menu' );
+	add_action( 'wp_enqueue_scripts', 'mdb_product_load_scripts');
+
 	add_action( 'add_meta_boxes', 'mdb_products_meta_boxes' );
 	add_action( 'save_post', 'mdb_save_product' );
-	add_action( 'mochila_get', 'mdb_get_products', 10, 1 );
-
 	add_filter( 'the_content', 'mdb_filter_product_content' );
+
+	add_action( 'mochila_get', 'mdb_get_products', 10, 1 );
+	
 ?>
