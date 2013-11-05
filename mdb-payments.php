@@ -1,31 +1,31 @@
 <?php
 	
 	/*
-	Plugin Name: MDB Payments
+	Plugin Name: MDB Products
 	Plugin URI: http://marcusbattle.com
-	Description: Payments Post Type for Non-profits
+	Description: Products Post Type
 	Version: 1.0
 	Author: Marcus Battle
 	Author URI: http://marcusbattle.com
 	License: DO NOT STEAL
 	*/
 
-	function mdb_payments_init() {
+	function mdb_products_init() {
 
 		$labels = array(
-			'name'               => _x( 'Payments', 'post type general name' ),
-			'singular_name'      => _x( 'Payment', 'post type singular name' ),
-			'add_new'            => _x( 'Add Payment', 'Payment' ),
-			'add_new_item'       => __( 'Add New Payment' ),
-			'edit_item'          => __( 'Edit Payment' ),
-			'new_item'           => __( 'New Payment' ),
-			'all_items'          => __( 'All Payments' ),
-			'view_item'          => __( 'View Payment' ),
-			'search_items'       => __( 'Search Payments' ),
-			'not_found'          => __( 'No Payments found' ),
-			'not_found_in_trash' => __( 'No Payments found in the Trash' ), 
+			'name'               => _x( 'Products', 'post type general name' ),
+			'singular_name'      => _x( 'Product', 'post type singular name' ),
+			'add_new'            => _x( 'Add Product', 'Product' ),
+			'add_new_item'       => __( 'Add New Product' ),
+			'edit_item'          => __( 'Edit Product' ),
+			'new_item'           => __( 'New Product' ),
+			'all_items'          => __( 'All Products' ),
+			'view_item'          => __( 'View Product' ),
+			'search_items'       => __( 'Search Products' ),
+			'not_found'          => __( 'No Products found' ),
+			'not_found_in_trash' => __( 'No Products found in the Trash' ), 
 			'parent_item_colon'  => '',
-			'menu_name'          => 'Payments',
+			'menu_name'          => 'Products',
 			'can_export'			=> true
 		);
 		
@@ -34,96 +34,82 @@
 			'description'   => 'Holds our apps and app specific data',
 			'public'        => true,
 			'menu_position' => 5,
-			'supports'      => array( 'title' ),
+			'taxonomies' => array('category'),
+			'supports'      => array( 'title', 'editor' ),
 			'has_archive'   => true,
 			'show_in_nav_menus' => true,
-			'rewrite' 			=> array( 'slug' => 'payments' ),
+			'rewrite' 			=> array( 'slug' => 'products' ),
 			'capability_type' => 'post',
-			'publicly_queryable' => false
+			'publicly_queryable' => true
 		);
 
-		register_post_type( 'payment', $args );
+		register_post_type( 'product', $args );
 	}
 
-	function mdb_create_contribution_taxonomies() {
-		// Add new taxonomy, make it hierarchical (like categories)
-		$labels = array(
-			'name'              => _x( 'Contributions', 'taxonomy general name' ),
-			'singular_name'     => _x( 'Contribution', 'taxonomy singular name' ),
-			'search_items'      => __( 'Search Contributions' ),
-			'all_items'         => __( 'All Contributions' ),
-			'parent_item'       => __( 'Parent Contribution' ),
-			'parent_item_colon' => __( 'Parent Contribution:' ),
-			'edit_item'         => __( 'Edit Contribution' ),
-			'update_item'       => __( 'Update Contribution' ),
-			'add_new_item'      => __( 'Add New Contribution' ),
-			'new_item_name'     => __( 'New Contribution Name' ),
-			'menu_name'         => __( 'Contributions' ),
-		);
-
-		$args = array(
-			'hierarchical'      => true,
-			'labels'            => $labels,
-			'show_ui'           => true,
-			'show_admin_column' => true,
-			'query_var'         => true,
-			'rewrite'           => array( 'slug' => 'contribution' ),
-		);
-
-		register_taxonomy( 'contribution', 'payment', $args );
+	function mdb_products_meta_boxes() {
+		add_meta_box( 'mdb-product', 'Product Information', 'mdb_product_box', 'product', 'normal', 'high' );
 	}
 
-	function mdb_payments_meta_boxes() {
-		add_meta_box( 'mdb-payment', 'Payment Information', 'mdb_payment_box', 'payment', 'normal', 'high' );
+	function mdb_product_box( $post ) {
+
+		$amount_type = get_post_meta( $post->ID, 'amount_type', true );
+		$amount = get_post_meta( $post->ID, 'amount', true );
+
+		echo "<p><strong>Amount Type</strong> $amount_type</p>";
+		echo "<select name=\"amount_type\">";
+		echo "<option>--</option>";
+		echo "<option value=\"fixed\">Fixed</option>";
+		echo "<option value=\"donation\">Donation</option>";
+		echo "</select>";
+
+		echo "<p><strong>Amount</strong></p>";
+		echo "<input type=\"text\" name=\"amount\" value=\"$amount\" />";
+
 	}
 
-	function mdb_payment_box( $post ) {
+	function mdb_save_product( $post_id ) {
 
-		$amount = get_post_meta( $post->ID, '_amount', true );
-
-		if ( $amount ) echo "Amount Paid: <input type=\"text\" name=\"amount\" value=\"$$amount\" disabled=\"true\" />";
-		else echo "Amount: <input type=\"text\" name=\"amount\" value=\"\" />";
-	}
-
-	function mdb_save_payment( $post_id ) {
+		if ( isset($_REQUEST['amount_type']) ) {
+			update_post_meta( $post_id, 'amount_type', $_REQUEST['amount_type'] );
+		}
 
 		if ( isset($_REQUEST['amount']) ) {
-			update_post_meta( $post_id, '_amount', $_REQUEST['amount'] );
+			update_post_meta( $post_id, 'amount', $_REQUEST['amount'] );
 		}
 
 	}
 
 	// Action hooks for mochila api
-	function mdb_get_payments( $mochila ) {
+	function mdb_get_products( $mochila ) {
 
 		if ( isset($mochila->uri[2]) && ($mochila->uri[2] == 'contributions') ) {
 			mdb_get_contributions( $mochila );
 			exit;
 		}
 
-		$args['post_type'] = 'payment';
+		$args['post_type'] = 'product';
 		$query = new WP_Query( $args );
 
-		$payments = array();
+		$products = array();
 
 		foreach( $query->posts as $post ) {
 			
 			$contributions = array();
 
-			$payment['description'] = $post->post_title;
-			$payment['amount'] = get_post_meta( $post->ID, '_amount', true );
-			$payment['user_id'] = $mochila->user_id;
+			$product['description'] = $post->post_title;
+			$product['amount'] = get_post_meta( $post->ID, '_amount', true );
+			$product['user_id'] = $mochila->user_id;
 
 			foreach ( wp_get_post_terms( $post->ID, 'contribution' ) as $contribution ) {
 				array_push( $contributions, $contribution->name );
 			}
 
-			$payment['contribution_types'] = $contributions;
+			$product['contribution_types'] = $contributions;
 
-			array_push( $payments, $payment );
+			array_push( $products, $product );
 		}
 
-		$mochila->print_json( array( $mochila->plural => $payments, 'count' => count($payments) ) );
+		$mochila->print_json( array( $mochila->plural => $products, 'count' => count($products) ) );
 
 	}
 
@@ -141,9 +127,8 @@
 		$mochila->print_json( array( 'contribution_types' => $contribution_types, 'count' => count($contributions) ) );
 	}
 
-	add_action( 'init', 'mdb_payments_init' );
-	add_action( 'init', 'mdb_create_contribution_taxonomies', 0 );
-	add_action( 'add_meta_boxes', 'mdb_payments_meta_boxes' );
-	add_action( 'save_post', 'mdb_save_payment' );
-	add_action( 'mochila_get', 'mdb_get_payments', 10, 1 );
+	add_action( 'init', 'mdb_products_init' );
+	add_action( 'add_meta_boxes', 'mdb_products_meta_boxes' );
+	add_action( 'save_post', 'mdb_save_product' );
+	add_action( 'mochila_get', 'mdb_get_products', 10, 1 );
 ?>
