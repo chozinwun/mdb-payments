@@ -10,8 +10,10 @@
 
 	if ($post_status == 'publish') {
 		$stripe_public_key = get_option('mdb_product_stripe_public_key');
+		$stripe_secret_key = get_option('mdb_product_stripe_secret_key');
 	} else {
 		$stripe_public_key = get_option('mdb_product_stripe_test_public_key');
+		$stripe_secret_key = get_option('mdb_product_stripe_test_secret_key');
 	}
 
 	/*
@@ -26,17 +28,33 @@
 	- Add check for logged in?
 
 	*/
+	if ( isset($_POST) && !empty($_POST) ) {
+
+		// TODO: Add entry to payments database
+
+		// Process payment
+		$response = json_decode( mdb_post_payment( $stripe_secret_key, $_POST['amount']) );
+	}
 ?>
 
+<?php if( isset($response->error) ): ?>
 
-<form>
+	<div class="msg error"><?php echo $response->error->message ?></div>
+
+<?php elseif ( isset($response->id)): ?>
+	
+	<div class="msg success">Thank You. Your payment was successfully processed!</div>
+
+<?php endif; ?>
+
+<form action="<?php echo get_permalink( $post->ID ) ?>" method="POST">
 
 	<?php if( $amount_type == 'donation' ): ?>
 
 		<label>Amount: </label>
-		<input type="text" name="amount" />
+		<input type="text" name="amount" class="required"  />
 
-	<?php elseif ( $amount_type == 'fixed' ): ?>
+	<?php else: ?>
 
 		<label>Amount: $<?php echo $amount ?></label>
 		<input type="hidden" name="amount" value="<?php echo $amount ?>" />

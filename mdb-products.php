@@ -126,11 +126,39 @@
 		if ( $post->post_type == 'product' ) {
 
 			ob_start();
-			include( plugin_dir_path( __FILE__ ) . 'templates/product-buy-now.php' );
+			include( plugin_dir_path( __FILE__ ) . 'templates/product-buy-now-stripe.php' );
 			$content = $content . ob_get_clean();
 			ob_flush();
 			
 			return $content;
+
+		}
+
+	}
+
+	function mdb_post_payment( $stripe_key = '', $amount = 0 ) {
+
+		if ( isset( $_REQUEST['stripeToken']) ) {
+
+			// Get cURL resource
+			$curl = curl_init();
+			$header[] = 'Content-type: application/x-www-form-urlencoded';
+			$header[] = 'Authorization: Bearer ' . $stripe_key;
+
+			// Set some options - we are passing in a useragent too here
+			curl_setopt_array($curl, array(
+			    CURLOPT_RETURNTRANSFER => 1,
+			    CURLOPT_URL => 'https://api.stripe.com/v1/charges?card=' . $_REQUEST['stripeToken'] . '&amount=' . $amount * 100 . '&currency=usd' ,
+				CURLOPT_HTTPHEADER => $header,
+			    CURLOPT_POST => 1,
+			    CURLOPT_POSTFIELDS => array()
+			));
+			// Send the request & save response to $resp
+			$resp = curl_exec($curl);
+			// Close request to clear up some resources
+			curl_close($curl);
+
+			return $resp;
 
 		}
 
