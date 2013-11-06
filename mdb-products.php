@@ -49,6 +49,26 @@
 		add_option( 'mdb_product_stripe_public_key', '', '', true );
 		add_option( 'mdb_product_stripe_test_secret_key', '', '', true );
 		add_option( 'mdb_product_stripe_test_public_key', '', '', true );
+
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . "mdb_payments";
+
+		$sql = "CREATE TABLE $table_name (
+			id mediumint(11) NOT NULL AUTO_INCREMENT,
+			token_id varchar(64) NOT NULL,
+			name varchar(256) NOT NULL,
+			amount float(11) NOT NULL,
+			product_id mediumint(11) NOT NULL,
+			payment_type varchar(24) NOT NULL,
+			card_type varchar(24) NOT NULL,
+			last4 int(4) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			UNIQUE KEY id (id)
+		);";
+		
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta($sql);
 	}
 
 	function mdb_products_admin_menu() {
@@ -138,6 +158,9 @@
 
 	function mdb_post_payment( $stripe_key = '', $amount = 0 ) {
 
+		global $wpdb, $post;
+		$table_name = $wpdb->prefix . "mdb_payments";
+
 		if ( isset( $_REQUEST['stripeToken']) ) {
 
 			// Get cURL resource
@@ -157,6 +180,22 @@
 			$resp = curl_exec($curl);
 			// Close request to clear up some resources
 			curl_close($curl);
+
+			$stripe_response = json_decode( $resp );
+
+			if ( isset($stripe_response->id) ) {
+
+				$wpdb->insert( $table_name, array(
+					'token_id' => $stripe_response->id,
+					'name' => $stripe_response->card->name,
+					'amount' => $amount,
+					'product_id' => $post->ID,
+					'payment_type' => 'debit/credit',
+					'card_type' => $stripe_response->card->type,
+					'last4' => $stripe_response->card->last4
+				));
+
+			}
 
 			return $resp;
 

@@ -30,8 +30,6 @@
 	*/
 	if ( isset($_POST) && !empty($_POST) ) {
 
-		// TODO: Add entry to payments database
-
 		// Process payment
 		$response = json_decode( mdb_post_payment( $stripe_secret_key, $_POST['amount']) );
 	}
