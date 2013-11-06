@@ -59,7 +59,7 @@
 
 	function mdb_product_load_scripts() {
 
-		wp_register_script( 'mdb-product-buynow-js', plugins_url( '/assets/js/product.buynow.js', __FILE__ ), array('jquery'), false );
+		wp_register_script( 'mdb-product-buynow-js', plugins_url( '/assets/js/product.buynow.js', __FILE__ ), array('jquery'), false, true );
 		wp_enqueue_script( 'mdb-product-buynow-js' );
 
 	}
@@ -77,6 +77,7 @@
 		$amount_type = get_post_meta( $post->ID, 'amount_type', true );
 		$amount = get_post_meta( $post->ID, 'amount', true );
 		$button_label = get_post_meta( $post->ID, 'button_label', true );
+		$short_description = get_post_meta( $post->ID, 'short_description', true );
 
 		echo "<p><strong>Amount Type</strong> $amount_type</p>";
 		echo "<select name=\"amount_type\">";
@@ -90,6 +91,9 @@
 
 		echo "<p><strong>Button Label</strong></p>";
 		echo "<input type=\"text\" name=\"button_label\" value=\"$button_label\" />";
+
+		echo "<p><strong>Short Description</strong></p>";
+		echo "<input type=\"text\" name=\"short_description\" value=\"$short_description\" />";
 	}
 
 	function mdb_save_product( $post_id ) {
@@ -108,6 +112,10 @@
 
 		if ( isset($_REQUEST['button_label']) ) {
 			update_post_meta( $post_id, 'button_label', $_REQUEST['button_label'] );
+		}
+
+		if ( isset($_REQUEST['short_description']) ) {
+			update_post_meta( $post_id, 'short_description', $_REQUEST['short_description'] );
 		}
 	}
 

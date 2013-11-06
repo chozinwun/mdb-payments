@@ -36,8 +36,8 @@
 					key:         $(form).find('input[name="stripe_public_key"]').val(),
 					amount:      amount * 100,
 					currency:    'usd',
-					name:        '<?php echo $post->post_title ?>',
-					description: '<?php echo $post->post_title ?>',
+					name:        $(form).find('input[name="name"]').val(),
+					description: $(form).find('input[name="description"]').val(),
 					token:       token
 				});
 

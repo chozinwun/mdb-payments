@@ -4,12 +4,16 @@
 	
 		$ssk = isset($_POST['mdb_product_stripe_secret_key']) ? $_POST['mdb_product_stripe_secret_key'] : '';
 		update_option('mdb_product_stripe_secret_key',$_POST['mdb_product_stripe_secret_key']);
+		update_option('mdb_product_stripe_public_key',$_POST['mdb_product_stripe_public_key']);
+		update_option('mdb_product_stripe_test_secret_key',$_POST['mdb_product_stripe_test_secret_key']);
 		update_option('mdb_product_stripe_test_public_key',$_POST['mdb_product_stripe_test_public_key']);
 
 		echo "Page updated!";
 	} 
 
 	$stripe_secret_key = get_option('mdb_product_stripe_secret_key');
+	$stripe_public_key = get_option('mdb_product_stripe_public_key');
+	$stripe_test_secret_key = get_option('mdb_product_stripe_test_secret_key');
 	$stripe_test_public_key = get_option('mdb_product_stripe_test_public_key');
 ?>
 
@@ -26,11 +30,11 @@
 		</div>
 		<div class="form-field">
 			<label>Stripe Public Key</label>
-			<input name="mdb_product_stripe_public_key" type="text" value="" size="40" />
+			<input name="mdb_product_stripe_public_key" type="text" value="<?php echo $stripe_public_key ?>" size="40" />
 		</div>
 		<div class="form-field">
 			<label>Stripe Test Secret Key</label>
-			<input name="mdb_product_stripe_test_secret_key" type="text" value="" size="40" />
+			<input name="mdb_product_stripe_test_secret_key" type="text" value="<?php echo $stripe_test_secret_key ?>" size="40" />
 		</div>
 		<div class="form-field">
 			<label>Stripe Test Public Key</label>

@@ -2,6 +2,7 @@
 	$amount_type = get_post_meta( $post->ID, 'amount_type', true);
 	$amount = get_post_meta( $post->ID, 'amount', true);
 	$button_label = get_post_meta( $post->ID, 'button_label', true );
+	$short_description = get_post_meta( $post->ID, 'short_description', true );
 
 	$button_label = ($button_label) ? $button_label : 'Buy Now';
 	
@@ -42,6 +43,8 @@
 
 	<?php endif; ?>
 
+	<input type="hidden" name="name" value="<?php echo $post->post_title ?>" />
+	<input type="hidden" name="description" value="<?php echo $short_description ?>" />
 	<input type="hidden" name="stripeToken" value="" />
 	<input type="hidden" name="stripe_public_key" value="<?php echo $stripe_public_key ?>" />
 	<button id="submit-button"><?php echo $button_label ?></button>
