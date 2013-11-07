@@ -62,6 +62,7 @@
 			product_id mediumint(11) NOT NULL,
 			payment_type varchar(24) NOT NULL,
 			card_type varchar(24) NOT NULL,
+			email varchar(256) NOT NULL,
 			last4 int(4) NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			UNIQUE KEY id (id)
@@ -73,19 +74,25 @@
 
 	function mdb_products_admin_menu() {
 		
-		add_submenu_page( 'edit.php?post_type=product', 'Products Settings', 'Settings', 'manage_options', 'mdb-product-settings', 'mdb_page_product_settings' );
+		add_submenu_page( 'edit.php?post_type=product', 'Store Settings', 'Store Settings', 'manage_options', 'mdb-store-settings', 'mdb_page_store_settings' );
 
 	}
 
 	function mdb_product_load_scripts() {
 
-		wp_register_script( 'mdb-product-buynow-js', plugins_url( '/assets/js/product.buynow.js', __FILE__ ), array('jquery'), false, true );
-		wp_enqueue_script( 'mdb-product-buynow-js' );
+		global $post;
+
+		if ( $post->post_type == 'product' ) {
+			
+			wp_register_script( 'mdb-product-buynow-js', plugins_url( '/assets/js/product.buynow.js', __FILE__ ), array('jquery'), false, true );
+			wp_enqueue_script( 'mdb-product-buynow-js' );
+
+		}
 
 	}
 
-	function mdb_page_product_settings() {
-		include( plugin_dir_path( __FILE__ ) . 'templates/admin-product-settings.php' );
+	function mdb_page_store_settings() {
+		include( plugin_dir_path( __FILE__ ) . 'templates/admin-store-settings.php' );
 	}
 
 	function mdb_products_meta_boxes() {
@@ -98,6 +105,7 @@
 		$amount = get_post_meta( $post->ID, 'amount', true );
 		$button_label = get_post_meta( $post->ID, 'button_label', true );
 		$short_description = get_post_meta( $post->ID, 'short_description', true );
+		$max_quantity = get_post_meta( $post->ID, 'max_quantity', true );
 
 		echo "<p><strong>Amount Type</strong> $amount_type</p>";
 		echo "<select name=\"amount_type\">";
@@ -108,6 +116,9 @@
 
 		echo "<p><strong>Amount</strong></p>";
 		echo "<input type=\"text\" name=\"amount\" value=\"$amount\" />";
+
+		echo "<p><strong>Max Quantity</strong></p>";
+		echo "<input type=\"number\" name=\"max_quantity\" value=\"$max_quantity\" />";
 
 		echo "<p><strong>Button Label</strong></p>";
 		echo "<input type=\"text\" name=\"button_label\" value=\"$button_label\" />";
@@ -124,6 +135,10 @@
 
 		if ( isset($_REQUEST['amount']) ) {
 			update_post_meta( $post_id, 'amount', $_REQUEST['amount'] );
+		}
+
+		if ( isset($_REQUEST['max_quantity']) ) {
+			update_post_meta( $post_id, 'max_quantity', $_REQUEST['max_quantity'] );
 		}
 
 		if ( isset($_REQUEST['button_type']) ) {
@@ -156,22 +171,34 @@
 
 	}
 
-	function mdb_post_payment( $stripe_key = '', $amount = 0 ) {
+	function mdb_post_payment() {
 
 		global $wpdb, $post;
 		$table_name = $wpdb->prefix . "mdb_payments";
+
+		if ( $post->post_status == 'publish') {
+
+			$stripe_secret_key = get_option('mdb_product_stripe_secret_key');
+
+		} else {
+
+			$stripe_secret_key = get_option('mdb_product_stripe_test_secret_key');
+
+		}
+
+		$amount = $_POST['total'] * 100;
 
 		if ( isset( $_REQUEST['stripeToken']) ) {
 
 			// Get cURL resource
 			$curl = curl_init();
 			$header[] = 'Content-type: application/x-www-form-urlencoded';
-			$header[] = 'Authorization: Bearer ' . $stripe_key;
+			$header[] = 'Authorization: Bearer ' . $stripe_secret_key;
 
 			// Set some options - we are passing in a useragent too here
 			curl_setopt_array($curl, array(
 			    CURLOPT_RETURNTRANSFER => 1,
-			    CURLOPT_URL => 'https://api.stripe.com/v1/charges?card=' . $_REQUEST['stripeToken'] . '&amount=' . $amount * 100 . '&currency=usd' ,
+			    CURLOPT_URL => 'https://api.stripe.com/v1/charges?card=' . $_REQUEST['stripeToken'] . '&amount=' . $amount . '&currency=usd' ,
 				CURLOPT_HTTPHEADER => $header,
 			    CURLOPT_POST => 1,
 			    CURLOPT_POSTFIELDS => array()
@@ -188,7 +215,8 @@
 				$wpdb->insert( $table_name, array(
 					'token_id' => $stripe_response->id,
 					'name' => $stripe_response->card->name,
-					'amount' => $amount,
+					'email' => $_POST['email'],
+					'amount' => $_POST['total'],
 					'product_id' => $post->ID,
 					'payment_type' => 'debit/credit',
 					'card_type' => $stripe_response->card->type,

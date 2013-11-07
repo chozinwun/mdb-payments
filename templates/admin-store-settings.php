@@ -19,7 +19,7 @@
 
 <div class="wrap">
 
-	<h2>Product Settings</h2>
+	<h2>Store Settings</h2>
 
 	<h3>Stripe Payment Details</h3>
 
