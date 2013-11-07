@@ -4,6 +4,7 @@
 	$button_label = get_post_meta( $post->ID, 'button_label', true );
 	$max_quantity = get_post_meta( $post->ID, 'max_quantity', true );
 	$short_description = get_post_meta( $post->ID, 'short_description', true );
+	$confirmation_message = get_post_meta( $post->ID, 'confirmation_message', true );
 
 	$button_label = ($button_label) ? $button_label : 'Buy Now';
 	
@@ -42,7 +43,11 @@
 
 <?php elseif ( isset($response->id)): ?>
 	
-	<div class="msg success">Thank You. Your payment was successfully processed!</div>
+	<?php if ( !empty($confirmation_message) ): ?>
+		<p class="msg success"><?php echo $confirmation_message ?></p>
+	<?php else: ?>
+		<p class="msg success">Thank You. Your payment was successfully processed!</p>
+	<?php endif; ?>
 
 <?php endif; ?>
 
@@ -79,7 +84,7 @@
 		</li>
 	</ul>
 
-	<input type="hidden" name="total" value="" />
+	<input type="hidden" name="total" value="<?php echo $amount ?>" />
 	<input type="hidden" name="name" value="<?php echo $post->post_title ?>" />
 	<input type="hidden" name="description" value="<?php echo $short_description ?>" />
 	<input type="hidden" name="stripeToken" value="" />

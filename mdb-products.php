@@ -106,6 +106,7 @@
 		$button_label = get_post_meta( $post->ID, 'button_label', true );
 		$short_description = get_post_meta( $post->ID, 'short_description', true );
 		$max_quantity = get_post_meta( $post->ID, 'max_quantity', true );
+		$confirmation_message = get_post_meta( $post->ID, 'confirmation_message', true );
 
 		echo "<p><strong>Amount Type</strong> $amount_type</p>";
 		echo "<select name=\"amount_type\">";
@@ -125,6 +126,9 @@
 
 		echo "<p><strong>Short Description</strong></p>";
 		echo "<input type=\"text\" name=\"short_description\" value=\"$short_description\" />";
+
+		echo "<p><strong>Payment Confirmation Message</strong></p>";
+		echo "<textarea name=\"confirmation_message\" style=\"width: 100%;\">$confirmation_message</textarea>";
 	}
 
 	function mdb_save_product( $post_id ) {
@@ -151,6 +155,10 @@
 
 		if ( isset($_REQUEST['short_description']) ) {
 			update_post_meta( $post_id, 'short_description', $_REQUEST['short_description'] );
+		}
+
+		if ( isset($_REQUEST['confirmation_message']) ) {
+			update_post_meta( $post_id, 'confirmation_message', $_REQUEST['confirmation_message'] );
 		}
 	}
 
