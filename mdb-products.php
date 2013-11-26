@@ -39,7 +39,7 @@
 			'has_archive'   => true,
 			'show_in_nav_menus' => true,
 			'rewrite' 			=> array( 'slug' => 'products' ),
-			'capability_type' => 'post',
+			'capability_type' => 'page',
 			'publicly_queryable' => true
 		);
 
@@ -107,6 +107,8 @@
 		$short_description = get_post_meta( $post->ID, 'short_description', true );
 		$max_quantity = get_post_meta( $post->ID, 'max_quantity', true );
 		$confirmation_message = get_post_meta( $post->ID, 'confirmation_message', true );
+		$version = get_post_meta( $post->ID, 'version', true );
+		$download_link = get_post_meta( $post->ID, 'download_link', true );
 
 		echo "<p><strong>Amount Type</strong> $amount_type</p>";
 		echo "<select name=\"amount_type\">";
@@ -129,6 +131,13 @@
 
 		echo "<p><strong>Payment Confirmation Message</strong></p>";
 		echo "<textarea name=\"confirmation_message\" style=\"width: 100%;\">$confirmation_message</textarea>";
+
+		echo "<p><strong>Version</strong></p>";
+		echo "<input type=\"text\" name=\"version\" value=\"$version\" />";
+
+		echo "<p><strong>Download Link</strong></p>";
+		echo "<input type=\"text\" name=\"download_link\" value=\"$download_link\" />";
+
 	}
 
 	function mdb_save_product( $post_id ) {
@@ -160,6 +169,15 @@
 		if ( isset($_REQUEST['confirmation_message']) ) {
 			update_post_meta( $post_id, 'confirmation_message', $_REQUEST['confirmation_message'] );
 		}
+
+		if ( isset($_REQUEST['version']) ) {
+			update_post_meta( $post_id, 'version', $_REQUEST['version'] );
+		}
+
+		if ( isset($_REQUEST['download_link']) ) {
+			update_post_meta( $post_id, 'download_link', $_REQUEST['download_link'] );
+		}
+
 	}
 
 	function mdb_filter_product_content( $content ) {
