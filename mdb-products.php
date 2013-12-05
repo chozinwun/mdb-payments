@@ -260,29 +260,29 @@
 	// Action hooks for mochila api
 	function mdb_get_products( $mochila ) {
 
-		if ( isset($mochila->uri[2]) && ($mochila->uri[2] == 'contributions') ) {
-			mdb_get_contributions( $mochila );
-			exit;
+		$args['post_type'] = 'product';
+		
+		if ( isset($mochila->uri[2]) ) {
+
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'category',
+					'field' => 'slug',
+					'terms' => $mochila->uri[2]
+				)
+			);
+
+			$mochila->plural = $mochila->uri[2];
 		}
 
-		$args['post_type'] = 'product';
 		$query = new WP_Query( $args );
 
 		$products = array();
 
 		foreach( $query->posts as $post ) {
-			
-			$contributions = array();
 
-			$product['description'] = $post->post_title;
+			$product['name'] = $post->post_title;
 			$product['amount'] = get_post_meta( $post->ID, '_amount', true );
-			$product['user_id'] = $mochila->user_id;
-
-			foreach ( wp_get_post_terms( $post->ID, 'contribution' ) as $contribution ) {
-				array_push( $contributions, $contribution->name );
-			}
-
-			$product['contribution_types'] = $contributions;
 
 			array_push( $products, $product );
 		}
@@ -291,18 +291,9 @@
 
 	}
 
-	function mdb_get_contributions( $mochila ) {
+	function mdb_post_products( $mochila ) {
 
-		$contribution_types = array();
-		$contributions = get_terms( 'contribution', array(
-		 	'hide_empty' => 0
-		) );
 
-		foreach ( $contributions as $contribution ) {
-			array_push( $contribution_types, $contribution->name );
-		}
-
-		$mochila->print_json( array( 'contribution_types' => $contribution_types, 'count' => count($contributions) ) );
 	}
 
 	add_action( 'init', 'mdb_products_init' );
@@ -313,6 +304,7 @@
 	add_action( 'save_post', 'mdb_save_product' );
 	add_filter( 'the_content', 'mdb_filter_product_content' );
 
-	add_action( 'mochila_get', 'mdb_get_products', 10, 1 );
+	add_action( 'mochila_get_products', 'mdb_get_products', 10, 1 );
+	add_action( 'mochila_post_products', 'mdb_post_products', 10, 1 );
 	
 ?>
