@@ -197,10 +197,17 @@
 
 	}
 
-	function mdb_post_payment() {
+	function mdb_post_payments( $mochila = null ) {
 
 		global $wpdb, $post;
 		$table_name = $wpdb->prefix . "mdb_payments";
+
+		if ( $mochila ) {
+
+			echo "let's go!";
+			exit;
+			
+		}
 
 		if ( $post->post_status == 'publish') {
 
@@ -307,4 +314,5 @@
 	add_action( 'mochila_get_products', 'mdb_get_products', 10, 1 );
 	add_action( 'mochila_post_products', 'mdb_post_products', 10, 1 );
 	
+	add_action( 'mochila_post_payments', 'mdb_post_payments', 10, 1 );
 ?>
