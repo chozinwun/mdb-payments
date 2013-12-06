@@ -291,6 +291,15 @@
 
 	}
 
+	function mdb_mochila_get_payments( $mochila ) {
+
+		global $wpdb;
+
+		$user = get_userdata( $mochila->user_id );
+		$sql = "SELECT * FROM {$wpdb->prefix}mdb_payments WHERE email = {$user->data->user_email}";
+
+	}
+
 	function mdb_mochila_post_payments( $mochila ) {
 
 		global $wpdb;
@@ -301,11 +310,11 @@
 
 		$stripe_token = stripe_create_token();
 		$stripe_charge = stripe_create_charge( $stripe_token );
-		
+
 		if ( isset($stripe_charge->id) ) {
 
 			print_r( $_POST['products'] );
-			
+
 			foreach( $_POST['products'] as $product_id) {
 			
 				$wpdb->insert( $table_name, array(
@@ -313,7 +322,7 @@
 					'name' => $stripe_charge->card->name,
 					'email' => $user->data->user_email,
 					'amount' => $_POST['total'],
-					'product_id' => $product_id,
+					'product_id' => 0,
 					'payment_type' => 'debit/credit',
 					'card_type' => $stripe_charge->card->type,
 					'last4' => $stripe_charge->card->last4
@@ -322,6 +331,10 @@
 			}
 
 			echo "you got paid";
+
+		} else {
+
+			echo "there was a problem";
 
 		}
 
@@ -394,5 +407,6 @@
 	add_filter( 'the_content', 'mdb_filter_product_content' );
 
 	add_action( 'mochila_get_products', 'mdb_get_products', 10, 1 );
+	add_action( 'mochila_get_payments', 'mdb_mochila_get_payments', 10, 1 );
 	add_action( 'mochila_post_payments', 'mdb_mochila_post_payments', 10, 1 );
 ?>
