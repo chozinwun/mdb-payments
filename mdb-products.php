@@ -197,17 +197,10 @@
 
 	}
 
-	function mdb_post_payments( $mochila = null ) {
+	function mdb_post_payment() {
 
 		global $wpdb, $post;
 		$table_name = $wpdb->prefix . "mdb_payments";
-
-		if ( $mochila ) {
-
-			echo "let's go!";
-			exit;
-			
-		}
 
 		if ( $post->post_status == 'publish') {
 
@@ -298,8 +291,97 @@
 
 	}
 
-	function mdb_post_products( $mochila ) {
+	function mdb_mochila_post_payments( $mochila ) {
 
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . "mdb_payments";
+		$user = get_userdata( $mochila->user_id );
+		$stripe_secret_key = get_option('mdb_product_stripe_test_secret_key');
+
+		$stripe_token = stripe_create_token();
+		$stripe_charge = stripe_create_charge( $stripe_token );
+		
+		if ( isset($stripe_charge->id) ) {
+
+			print_r( $_POST['products'] );
+			
+			foreach( $_POST['products'] as $product_id) {
+			
+				$wpdb->insert( $table_name, array(
+					'token_id' => $stripe_token,
+					'name' => $stripe_charge->card->name,
+					'email' => $user->data->user_email,
+					'amount' => $_POST['total'],
+					'product_id' => $product_id,
+					'payment_type' => 'debit/credit',
+					'card_type' => $stripe_charge->card->type,
+					'last4' => $stripe_charge->card->last4
+				));
+
+			}
+
+			echo "you got paid";
+
+		}
+
+		exit;
+
+	}
+
+	function stripe_create_token() {
+
+		$curl = curl_init();
+		$header[] = 'Content-type: application/x-www-form-urlencoded';
+		$header[] = 'Authorization: Bearer ' . get_option('mdb_product_stripe_test_secret_key');
+
+		// Set some options - we are passing in a useragent too here
+		curl_setopt_array($curl, array(
+		    CURLOPT_RETURNTRANSFER => 1,
+		    CURLOPT_URL => 'https://api.stripe.com/v1/tokens' ,
+			CURLOPT_HTTPHEADER => $header,
+		    CURLOPT_POST => 1,
+		    CURLOPT_POSTFIELDS => 'card[number]=' . $_POST['card_number'] . '&card[exp_month]=' . $_POST['exp_month'] . '&card[exp_year]=' . $_POST['exp_year'] . '&card[cvc]=' . $_POST['cvc']
+		));
+		// Send the request & save response to $resp
+		$resp = curl_exec($curl);
+		// Close request to clear up some resources
+		curl_close($curl);
+
+		$stripe_response = json_decode( $resp );
+
+		if ( isset($stripe_response->id) ) return $stripe_response->id;
+		else return false;
+
+	}
+
+	function stripe_create_charge( $stripe_token ) {
+		
+		if ( $stripe_token ) {
+
+			$amount = $_POST['total'] * 100;
+
+			// Get cURL resource
+			$curl = curl_init();
+			$header[] = 'Content-type: application/x-www-form-urlencoded';
+			$header[] = 'Authorization: Bearer ' . get_option('mdb_product_stripe_test_secret_key');
+
+			// Set some options - we are passing in a useragent too here
+			curl_setopt_array($curl, array(
+			    CURLOPT_RETURNTRANSFER => 1,
+			    CURLOPT_URL => 'https://api.stripe.com/v1/charges?card=' . $stripe_token . '&amount=' . $amount . '&currency=usd' ,
+				CURLOPT_HTTPHEADER => $header,
+			    CURLOPT_POST => 1,
+			    CURLOPT_POSTFIELDS => array()
+			));
+			// Send the request & save response to $resp
+			$resp = curl_exec($curl);
+			// Close request to clear up some resources
+			curl_close($curl);
+
+			return json_decode( $resp );
+
+		}
 
 	}
 
@@ -312,7 +394,5 @@
 	add_filter( 'the_content', 'mdb_filter_product_content' );
 
 	add_action( 'mochila_get_products', 'mdb_get_products', 10, 1 );
-	add_action( 'mochila_post_products', 'mdb_post_products', 10, 1 );
-	
-	add_action( 'mochila_post_payments', 'mdb_post_payments', 10, 1 );
+	add_action( 'mochila_post_payments', 'mdb_mochila_post_payments', 10, 1 );
 ?>

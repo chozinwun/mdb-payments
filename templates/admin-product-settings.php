@@ -19,11 +19,11 @@
 
 <div class="wrap">
 
-	<h2>Store Settings</h2>
+	<h2>Product Settings</h2>
 
 	<h3>Stripe Payment Details</h3>
 
-	<form action="edit.php?post_type=product&page=mdb-store-settings" method="POST">
+	<form action="edit.php?post_type=product&page=mdb-product-settings" method="POST">
 		<div class="form-field">
 			<label>Stripe Secret Key</label>
 			<input name="mdb_product_stripe_secret_key" type="text" value="<?php echo $stripe_secret_key ?>" size="40" />
