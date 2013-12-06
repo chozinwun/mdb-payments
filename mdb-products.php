@@ -60,6 +60,7 @@
 			name varchar(256) NOT NULL,
 			amount float(11) NOT NULL,
 			product_id mediumint(11) NOT NULL,
+			user_id mediumint(11) NOT NULL,
 			payment_type varchar(24) NOT NULL,
 			card_type varchar(24) NOT NULL,
 			email varchar(256) NOT NULL,
@@ -281,6 +282,7 @@
 
 		foreach( $query->posts as $post ) {
 
+			$product['id'] = $post->ID;
 			$product['name'] = $post->post_title;
 			$product['amount'] = get_post_meta( $post->ID, '_amount', true );
 
