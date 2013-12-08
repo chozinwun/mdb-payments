@@ -298,7 +298,11 @@
 		global $wpdb;
 
 		$user = get_userdata( $mochila->user_id );
-		$sql = "SELECT * FROM {$wpdb->prefix}mdb_payments WHERE email = {$user->data->user_email}";
+		$sql = "SELECT * FROM {$wpdb->prefix}mdb_payments WHERE user_id = {$mochila->user_id}";
+
+		$payments = $wpdb->get_results($sql);
+
+		$mochila->print_json( array( 'payments' => $payments, 'count' => count($payments) ) );
 
 	}
 
@@ -315,28 +319,29 @@
 
 		if ( isset($stripe_charge->id) ) {
 
-			print_r( $_POST['products'] );
-
-			foreach( $_POST['products'] as $product_id) {
+			foreach( $_POST['products'] as $key => $product_id) {
 			
 				$wpdb->insert( $table_name, array(
 					'token_id' => $stripe_token,
 					'name' => $stripe_charge->card->name,
 					'email' => $user->data->user_email,
-					'amount' => $_POST['total'],
-					'product_id' => 0,
+					'amount' => $_POST['amount'][$key],
+					'product_id' => $product_id,
 					'payment_type' => 'debit/credit',
 					'card_type' => $stripe_charge->card->type,
-					'last4' => $stripe_charge->card->last4
+					'last4' => $stripe_charge->card->last4,
+					'user_id' => $user->ID
 				));
 
 			}
 
-			echo "you got paid";
+			$result = array( 'success' => true, 'msg' => 'Your card ending in ' . $stripe_charge->card->last4 . ' has been charged $' . $_POST['total'], 'status' => '200' );
+			$mochila->print_json( $result , 200 );
 
 		} else {
 
-			echo "there was a problem";
+			$result = array( 'errors' => array( array( 'msg' => 'This could not be processed', 'status' => '404' ) ) );
+			$mochila->print_json( $result , 404 );
 
 		}
 
